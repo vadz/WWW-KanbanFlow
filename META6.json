@@ -1,0 +1,19 @@
+{
+  "authors": [
+    "Vadim Zeitlin"
+  ],
+  "build-depends": [
+  ],
+  "depends": [
+  ],
+  "description": "Wraps https://kanbanflow.com/ API.",
+  "name": "WWW::KanbanFlow",
+  "provides": {
+    "WWW::KanbanFlow": "lib/WWW/KanbanFlow.rakumod"
+  },
+  "resources": [
+  ],
+  "test-depends": [
+  ],
+  "version": "0.0.1"
+}
