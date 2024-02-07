@@ -16,6 +16,10 @@ my $api = WWW::KanbanFlow.new(
 
 my $board = $api.get-board;
 
+my $task = $api.create-task(
+        name => 'My brand new task'
+    );
+
 =end code
 
 =head1 DESCRIPTION
@@ -47,6 +51,28 @@ class WWW::KanbanFlow {
         my $response = await $!ua.get("board");
 
         await $response.body
+    }
+
+    class Task {
+        has Str $.id is required;
+    }
+
+    method create-task(Str:D $name --> Task) {
+        # TODO: Currently we always create the task in the first column
+        # and use deprecated "columnIndex" parameter. We should allow
+        # specifying the column and use "columnId" instead.
+        my %body =
+            name => $name,
+            columnIndex => 0
+        ;
+        my $response = await $!ua.post('tasks', :%body);
+
+        my $res = await $response.body;
+        Task.new(id => $res<taskId>)
+    }
+
+    method delete-task(Task:D $task) {
+        await $!ua.delete("tasks/{$task.id}");
     }
 
     has Str $.api-token is required;
