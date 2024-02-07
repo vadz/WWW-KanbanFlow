@@ -29,21 +29,27 @@ by KanbanFlow, please refer to its documentation for more details.
 
 =end pod
 
-use HTTP::UserAgent;
-use JSON::Fast <immutable>;
+use Cro::HTTP::Client;
 
 class WWW::KanbanFlow {
     submethod TWEAK() {
-        $!ua.auth('apiToken', $!api-token);
+        $!ua = Cro::HTTP::Client.new(
+            auth => {
+                username => 'apiToken',
+                password => $!api-token
+            },
+            base-uri     => 'https://kanbanflow.com/api/v1/',
+            content-type => 'application/json'
+        );
     }
 
     method get-board() {
-        my $response = $!ua.get("https://kanbanflow.com/api/v1/board");
+        my $response = await $!ua.get("board");
 
-        from-json($response.content)
+        await $response.body
     }
 
     has Str $.api-token is required;
 
-    has $!ua = HTTP::UserAgent.new(:throw-exceptions);
-};
+    has $!ua;
+}
