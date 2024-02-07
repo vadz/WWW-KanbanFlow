@@ -1,5 +1,5 @@
 use Test;
 
-plan 1;
-
 use-ok "WWW::KanbanFlow";
+
+done-testing;
