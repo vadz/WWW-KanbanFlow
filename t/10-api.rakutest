@@ -1,0 +1,9 @@
+use Test;
+use WWW::KanbanFlow;
+
+ok %*ENV<KANBANFLOW_API_TOKEN>:exists, 'KANBANFLOW_API_TOKEN environment variable is set';
+
+my $api = WWW::KanbanFlow.new(api-token => %*ENV<KANBANFLOW_API_TOKEN>);
+ok $api.get-board, 'Can access the board';
+
+done-testing;

@@ -5,6 +5,8 @@
   "build-depends": [
   ],
   "depends": [
+    "HTTP::UserAgent",
+    "JSON::Fast"
   ],
   "description": "Wraps https://kanbanflow.com/ API.",
   "name": "WWW::KanbanFlow",
