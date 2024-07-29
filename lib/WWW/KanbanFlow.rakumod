@@ -106,6 +106,34 @@ class WWW::KanbanFlow {
         self!check-rate-limit($response);
     }
 
+    class CommentParams {
+        has Str $.text is required;
+        has DateTime $.created;
+
+        # TODO: support providing the author.
+    }
+
+    class Comment {
+        has Str $.id is required;
+        has CommentParams $.params handles <text created>;
+    }
+
+    # Add a new comment to a task.
+    method add-comment(Task:D $task, CommentParams:D $params --> Comment) {
+        my %body = text => $params.text;
+
+        # Note that only UTC times are supported by KanbanFlow, anything else
+        # results in a 500 HTTP error.
+        %body<createdTimestamp> = $params.created.utc if $params.created.defined;
+
+        my $response = await $!ua.post("tasks/{$task.id}/comments", :%body);
+
+        self!check-rate-limit($response);
+
+        my $res = await $response.body;
+        Comment.new(id => $res<taskCommentId>, params => $params)
+    }
+
     # Set value of a custom numeric field.
     method set-numeric-field(Task:D $task, Str:D $field-id, Numeric $value) {
         my %body = value => { number => $value };
