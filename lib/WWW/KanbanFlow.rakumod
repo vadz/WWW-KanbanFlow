@@ -63,24 +63,41 @@ class WWW::KanbanFlow {
         await $response.body
     }
 
-    class Task {
-        has Str $.id is required;
+    # These names are fixed by the API.
+    enum Color <yellow white red green blue purple orange cyan brown magenta>;
+
+    class TaskParams {
+        has Str $.name is required;
+        has Color $.color;
+        has Str $.description;
+
+        # TODO: This is incomplete, more parameters can be provided when
+        # creating a task.
     }
 
-    method create-task(Str:D $name --> Task) {
+    class Task {
+        has Str $.id is required;
+        has TaskParams $.params handles <name color description>;
+    }
+
+    method create-task(TaskParams:D $params --> Task) {
         # TODO: Currently we always create the task in the first column
         # and use deprecated "columnIndex" parameter. We should allow
         # specifying the column and use "columnId" instead.
         my %body =
-            name => $name,
-            columnIndex => 0
+            name => $params.name,
+            columnIndex => 0,
         ;
+
+        %body<color> = $params.color if $params.color.defined;
+        %body<description> = $params.description if $params.description.defined;
+
         my $response = await $!ua.post('tasks', :%body);
 
         self!check-rate-limit($response);
 
         my $res = await $response.body;
-        Task.new(id => $res<taskId>)
+        Task.new(id => $res<taskId>, params => $params)
     }
 
     method delete-task(Task:D $task) {

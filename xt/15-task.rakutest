@@ -1,0 +1,24 @@
+use Test;
+use WWW::KanbanFlow;
+
+if !%*ENV<KANBANFLOW_TEST_ALL> {
+    warn "Set the KANBANFLOW_TEST_ALL environment variable to run this test.";
+    exit;
+}
+
+my $api = WWW::KanbanFlow.new(api-token => %*ENV<KANBANFLOW_API_TOKEN>);
+
+my $task-params = WWW::KanbanFlow::TaskParams.new(
+    name => 'Test task',
+    color => WWW::KanbanFlow::Color::cyan,
+    description => q:to/EOF/
+        New test task description.
+
+        Spanning multiple lines.
+        EOF
+);
+
+my $task;
+lives-ok { $task = $api.create-task($task-params) }, 'Can create task';
+
+done-testing;
