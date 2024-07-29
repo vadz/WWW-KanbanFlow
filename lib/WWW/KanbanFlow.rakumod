@@ -50,6 +50,12 @@ class WWW::KanbanFlow {
     method get-board() {
         my $response = await $!ua.get("board");
 
+        my $remaining = $response.header('X-RateLimit-Remaining');
+        if $remaining.Int < 10 {
+            my $reset-time = DateTime.new($response.header('X-RateLimit-Reset').Int);
+            die "Only $remaining requests left, wait until $reset-time in order to avoid rate limiting";
+        }
+
         await $response.body
     }
 
