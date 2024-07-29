@@ -106,6 +106,14 @@ class WWW::KanbanFlow {
         self!check-rate-limit($response);
     }
 
+    # Set value of a custom numeric field.
+    method set-numeric-field(Task:D $task, Str:D $field-id, Numeric $value) {
+        my %body = value => { number => $value };
+        my $response = await $!ua.post("tasks/{$task.id}/custom-fields/$field-id", :%body);
+
+        self!check-rate-limit($response);
+    }
+
     has Str $.api-token is required;
 
     has $!ua;
