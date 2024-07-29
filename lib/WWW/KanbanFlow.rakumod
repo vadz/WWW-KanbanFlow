@@ -47,14 +47,18 @@ class WWW::KanbanFlow {
         );
     }
 
-    method get-board() {
-        my $response = await $!ua.get("board");
-
+    method !check-rate-limit($response) {
         my $remaining = $response.header('X-RateLimit-Remaining');
         if $remaining.Int < 10 {
             my $reset-time = DateTime.new($response.header('X-RateLimit-Reset').Int);
             die "Only $remaining requests left, wait until $reset-time in order to avoid rate limiting";
         }
+    }
+
+    method get-board() {
+        my $response = await $!ua.get("board");
+
+        self!check-rate-limit($response);
 
         await $response.body
     }
@@ -73,12 +77,16 @@ class WWW::KanbanFlow {
         ;
         my $response = await $!ua.post('tasks', :%body);
 
+        self!check-rate-limit($response);
+
         my $res = await $response.body;
         Task.new(id => $res<taskId>)
     }
 
     method delete-task(Task:D $task) {
-        await $!ua.delete("tasks/{$task.id}");
+        my $response = await $!ua.delete("tasks/{$task.id}");
+
+        self!check-rate-limit($response);
     }
 
     has Str $.api-token is required;
