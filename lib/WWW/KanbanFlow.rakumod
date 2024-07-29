@@ -134,6 +134,46 @@ class WWW::KanbanFlow {
         Comment.new(id => $res<taskCommentId>, params => $params)
     }
 
+    class Attachment {
+        has Str $.id is required;
+    }
+
+    # Add an attachment to a task.
+    method add-attachment(Task:D $task, Str:D $name, Str:D $mimetype, Blob:D $data) {
+        # We need to use a different client for this, as the default one uses
+        # application/json content type which can't be overridden.
+        if !$!form-ua {
+            $!form-ua = Cro::HTTP::Client.new(
+                auth => {
+                    username => 'apiToken',
+                    password => $!api-token
+                },
+                base-uri     => 'https://kanbanflow.com/api/v1/',
+                # We need to specify the boundary here, as the generated one
+                # doesn't get into the header (this looks like a bug in Cro).
+                content-type => 'multipart/form-data;boundary=--kanbanflow-attachment',
+            );
+        }
+
+        my $response = await $!form-ua.post(
+            "tasks/{$task.id}/attachments",
+            body => [Cro::HTTP::Body::MultiPartFormData::Part.new(
+                headers => [Cro::HTTP::Header.new(
+                    name => 'content-type',
+                    value => $mimetype
+                )],
+                name => 'file',
+                filename => $name,
+                body-blob => $data,
+            )]
+        );
+
+        self!check-rate-limit($response);
+
+        my $res = await $response.body;
+        Attachment.new(id => $res<taskAttachmentId>)
+    }
+
     # Set value of a custom numeric field.
     method set-numeric-field(Task:D $task, Str:D $field-id, Numeric $value) {
         my %body = value => { number => $value };
@@ -145,4 +185,5 @@ class WWW::KanbanFlow {
     has Str $.api-token is required;
 
     has $!ua;
+    has $!form-ua;
 }
